@@ -1,0 +1,26 @@
+{
+    "name": "pdworzanski/todo-by-przemo",
+    "require": {
+        "symfony/console": "~2.6",
+        "doctrine/orm": "~2.2",
+        "symfony/yaml": "~2.6",
+        "incenteev/composer-parameter-handler": "~2.0"
+    },
+    "autoload": {
+        "psr-0": {"": "src"}
+    },
+    "scripts": {
+        "post-install-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ],
+        "post-update-cmd": [
+            "Incenteev\\ParameterHandler\\ScriptHandler::buildParameters"
+        ]
+    },
+    "extra": {
+        "incenteev-parameters": {
+            "file": "parameters.yml",
+            "parameter-key": "database"
+        }
+    }
+}
