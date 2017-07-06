@@ -22,5 +22,8 @@
             "file": "parameters.yml",
             "parameter-key": "database"
         }
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^6.2"
     }
 }
