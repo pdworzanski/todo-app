@@ -8,15 +8,17 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\Common\Persistence\ObjectManager;
+use Doctrine\ORM\EntityNotFoundException;
+use TodoApp\Task\Eraser;
 
 class RemoveCommand extends Command
 {
-    protected $om;
+    protected $taskEraser;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(Eraser $taskEraser)
     {
         parent::__construct();
-        $this->om = $om;
+        $this->taskEraser = $taskEraser;
     }
 
     protected function configure()
@@ -27,7 +29,7 @@ class RemoveCommand extends Command
             ->addArgument(
                 'ID',
                 InputArgument::REQUIRED,
-                'ID of task to remove'
+                'ID of the task to remove'
             )
         ;
     }
@@ -36,16 +38,17 @@ class RemoveCommand extends Command
     {
         $id = $input->getArgument('ID');
 
-        $task = $this->om->getRepository('TodoApp\Entity\Task')->find($id);
-
-        if (!$task) {
-            $output->writeln('<error>Task with given ID does not exist</error>');
+        try {
+            $this->taskEraser->delete($id);
+        } catch (EntityNotFoundException $e) {
+            $output->writeln("\n<error>Task with given ID does not exist</error>\n");
             return 1;
+        } catch (Exception $e) {
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
+            return 2;
         }
 
-        $this->om->remove($task);
-        $this->om->flush();
-
         $output->writeln('<info>Task has been removed</info>');
+        return 0;
     }
 }

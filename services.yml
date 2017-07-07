@@ -1,0 +1,29 @@
+
+imports:
+    - { resource: parameters.yml }
+
+parameters:
+
+services:
+
+    entityManager:
+        factory: ['TodoApp\Doctrine\EntityManagerFactory', 'create']
+        arguments:
+            - %database%
+
+    task.factory:
+        class: TodoApp\Task\Factory
+        arguments: ['@entityManager']
+
+    task.reader:
+        class: TodoApp\Task\Reader
+        arguments: ['@entityManager']
+
+    task.eraser:
+        class: TodoApp\Task\Eraser
+        arguments: ['@entityManager']
+
+    task.setter:
+        class: TodoApp\Task\Setter
+        arguments: ['@entityManager']
+

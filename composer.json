@@ -1,10 +1,11 @@
 {
-    "name": "pdworzanski/todo-by-przemo",
+    "name": "pdworzanski/todo-app",
     "require": {
         "symfony/console": "~2.6",
         "doctrine/orm": "~2.2",
-        "symfony/yaml": "~2.6",
-        "incenteev/composer-parameter-handler": "~2.0"
+        "incenteev/composer-parameter-handler": "~2.0",
+        "symfony/dependency-injection": "^3.3",
+        "symfony/config": "^3.3"
     },
     "autoload": {
         "psr-0": {"": "src"}

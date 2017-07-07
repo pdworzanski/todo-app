@@ -1,4 +1,4 @@
-# todo-by-przemo
+# todo-app
 
 ####Instalation
 1. Composer

@@ -10,15 +10,16 @@ use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Helper\TableStyle;
 use Symfony\Component\Console\Helper\TableSeparator;
+use TodoApp\Task\Reader;
 
 class ShowCommand extends Command
 {
-    protected $om;
+    protected $taskReader;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(Reader $taskReader)
     {
         parent::__construct();
-        $this->om = $om;
+        $this->taskReader = $taskReader;
     }
 
     protected function configure()
@@ -36,38 +37,37 @@ class ShowCommand extends Command
 
     protected function execute(InputInterface $input, OutputInterface $output)
     {
-        $dateMark = $input->getArgument('date');
-        if ($dateMark) {
-            try {
-                $date = new \DateTime(substr($dateMark, 1));
-                $tasks = $this->om->getRepository('TodoApp\Entity\Task')->findBy(array(
-                    'date' => $date
-                ));
-            } catch (\Exception $e) {
-                $output->writeln('<error>Ivalid date mark "'. $dateMark .'"</error>');
-                return 1;
-            }
-        } else {
-            $tasks = $this->om->getRepository('TodoApp\Entity\Task')->findAll();
+        try {
+            $tasks = $this->taskReader->get($input->getArgument('date'));
+        } catch (Exception $e) {
+            $output->writeln('<error>'. $e->getMessage() .'</error>');
+            return 1;
         }
 
         if ($tasks) {
-            $table = new Table($output);
-            $table->setStyle($this->getStyle());
-            $table->setHeaders(array('Done', 'ID', 'Date', 'Task'));
-            foreach ($tasks as $task) {
-                $table->addRow(array(
-                    ( $task->getIsDone() ) ? '[X]' : '[ ]',
-                    $task->getId(),
-                    $task->getDate()->format('Y-m-d'),
-                    $task->getText()
-                ));
-                $table->addRow(new TableSeparator());
-            }
-            $table->render();
+            $this->printTasks($output, $tasks);
         } else {
             $output->writeln('No tasks found');
         }
+    }
+
+    protected function printTasks(OutputInterface $output, $tasks)
+    {
+        $table = new Table($output);
+        $table->setStyle($this->getStyle());
+        $table->setHeaders(array('Done', 'ID', 'Date', 'Task'));
+
+        foreach ($tasks as $task) {
+            $table->addRow(array(
+                ( $task->getIsDone() ) ? '[X]' : '[ ]',
+                $task->getId(),
+                $task->getDate()->format('Y-m-d'),
+                $task->getText()
+            ));
+            $table->addRow(new TableSeparator());
+        }
+
+        $table->render();
     }
 
     protected function getStyle()

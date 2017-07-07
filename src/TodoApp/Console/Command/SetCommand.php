@@ -8,15 +8,18 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\Common\Persistence\ObjectManager;
+use TodoApp\Task\Setter;
+use InvalidArgumentException;
+use Doctrine\ORM\EntityNotFoundException;
 
 class SetCommand extends Command
 {
-    protected $om;
+    protected $taskSetter;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(Setter $taskSetter)
     {
         parent::__construct();
-        $this->om = $om;
+        $this->taskSetter = $taskSetter;
     }
 
     protected function configure()
@@ -42,22 +45,19 @@ class SetCommand extends Command
         $id = $input->getArgument('ID');
         $status = $input->getArgument('status');
 
-        $task = $this->om->getRepository('TodoApp\Entity\Task')->find($id);
-
-        if (!$task) {
+        try {
+            $this->taskSetter->setStatus($id, $status);
+        } catch (InvalidArgumentException $e) {
+            $output->writeln('<error>Invalid status. Use: done|undone"</error>');
+            return 1;
+        } catch (EntityNotFoundException $e) {
             $output->writeln('<error>Task with given ID does not exist</error>');
-            return 1;
+            return 2;
+        } catch (Exception $e) {
+            $output->writeln('<error>' . $e->getMessage() . '</error>');
+            return 3;
         }
 
-        if (!in_array($status, array('done', 'undone'))) {
-            $output->writeln('<error>Invalid status. Allowed statuses are done|undone"</error>');
-            return 1;
-        }
-
-        $isDone = ($status == 'done') ? true : false;
-        $task->setIsDone($isDone);
-        $this->om->flush();
-
-        $output->writeln('<info>Task #'. $id .' has been marked as '. $status .'</info>');
+        $output->writeln('Task <comment>#'. $id .'</comment> has been marked as <info>'. $status .'</info>');
     }
 }

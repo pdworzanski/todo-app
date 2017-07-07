@@ -9,15 +9,16 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Doctrine\Common\Persistence\ObjectManager;
 use TodoApp\Entity\Task;
+use TodoApp\Task\Factory;
 
 class AddCommand extends Command
 {
-    protected $om;
+    protected $taskFactory;
 
-    public function __construct(ObjectManager $om)
+    public function __construct(Factory $taskFactory)
     {
         parent::__construct();
-        $this->om = $om;
+        $this->taskFactory = $taskFactory;
     }
 
     protected function configure()
@@ -36,26 +37,12 @@ class AddCommand extends Command
     protected function execute(InputInterface $input, OutputInterface $output)
     {
         $text = $input->getArgument('text');
-        $date = new \DateTime();
-
-        if (preg_match("/@[^\\s]+/", $text, $matches, PREG_OFFSET_CAPTURE)) {
-            $dateMark = $matches[0][0];
-            $dateMarkPos = $matches[0][1];
-            $text = substr($text, 0, $dateMarkPos-1) . substr($text, $dateMarkPos+strlen($dateMark));
-            try {
-                $date = new \DateTime(substr($dateMark, 1));
-            } catch (\Exception $e) {
-                $output->writeln('<error>Ivalid date mark "'. $dateMark .'"</error>');
-                return 1;
-            }
+        try {
+            $this->taskFactory->create($text);
+        } catch (Exception $e) {
+            $output->writeln('<error>'. $e->getMessage() .'</error>');
+            return 1;
         }
-
-        $task = new Task();
-        $task->setText($text);
-        $task->setDate($date);
-
-        $this->om->persist($task);
-        $this->om->flush();
 
         $output->writeln('<info>Task</info> <comment>"' . $text . '"</comment> <info>has been added</info>');
     }
